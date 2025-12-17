@@ -33,6 +33,10 @@ func JWTAuth() echo.MiddlewareFunc {
 			tokenStr := strings.TrimPrefix(h, "Bearer ")
 
 			token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+				// Enforce HS256/HS384/HS512 only
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, jwt.ErrSignatureInvalid
+				}
 				return []byte(secret), nil
 			})
 			if err != nil || !token.Valid {
