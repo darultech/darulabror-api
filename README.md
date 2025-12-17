@@ -2,87 +2,222 @@
 
 [![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go&logoColor=white)](#)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](#)
+[![Swagger](https://img.shields.io/badge/Swagger-API%20Docs-85EA2D?logo=swagger&logoColor=000)](https://darulabror-717070183986.asia-southeast2.run.app/swagger/index.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Darul Abror](https://img.shields.io/badge/Darul%20Abror-API-111827)](#)
 
 Darul Abror API service (public + admin area) built with Echo, GORM, PostgreSQL, and optional Google Cloud Storage integration for public article media.
 
-## Features
+## API Documentation (Swagger)
 
-### Public
-- List published articles
-- Get published article by ID
-- Student registration form
-- Contact form
+- Swagger UI: https://darulabror-717070183986.asia-southeast2.run.app/swagger/index.html
+- OpenAPI JSON: https://darulabror-717070183986.asia-southeast2.run.app/swagger/doc.json
+- OpenAPI YAML: https://darulabror-717070183986.asia-southeast2.run.app/swagger/doc.yaml
 
-### Admin (`/admin`)
-- Manage articles (CRUD)
-- Manage registrations (list/detail/delete)
-- Manage contacts (list/detail/update/delete)
-- Profile endpoint (based on JWT claims)
+## Response format (convention)
 
-### Superadmin (subset of `/admin`)
-- Manage admins (create/list/update/delete)
+Most JSON responses follow this envelope (see `internal/utils/response.go`):
 
-## Requirements
-- Go 1.22+
-- PostgreSQL
-- (Optional) Google Cloud Storage bucket + credentials
-
-## Environment Variables
-
-Required:
-- `DATABASE_URL`  
-  Example: `postgres://user:password@localhost:5432/darulabror?sslmode=disable`
-- `JWT_SECRET`  
-  Secret used to verify JWT tokens for `/admin` endpoints.
-
-Optional:
-- `PUBLIC_BUCKET`  
-  If set, GCS client will be initialized and article media helpers can upload/resolve public URLs.
-
-GCP auth (if using GCS):
-- `GOOGLE_APPLICATION_CREDENTIALS` pointing to a service account JSON file.
-
-## Run (local)
-
-```bash
-cp .env.example .env 2>/dev/null || true
-go mod tidy
-go run ./cmd/echo-server
+Success:
+```json
+{
+  "status": "success",
+  "message": "OK",
+  "data": {}
+}
 ```
 
-Server defaults to `:8080` unless `PORT` is set.
+Error:
+```json
+{
+  "status": "error",
+  "message": "something went wrong"
+}
+```
 
-## Routes (high level)
+Notes:
+- Some endpoints intentionally return **No Content** (`201/204` with empty body) because handlers use `c.NoContent(...)`.
 
-Public:
-- `GET  /articles`
-- `GET  /articles/:id`
-- `POST /registrations`
-- `POST /contacts`
+## Authentication (Admin)
 
-Admin:
-- `GET    /admin/profile`
-- `GET    /admin/articles`
-- `POST   /admin/articles`
-- `PUT    /admin/articles/:id`
-- `DELETE /admin/articles/:id`
+1) Login to get JWT:
+- `POST /admin/login`
 
-- `GET    /admin/registrations`
-- `GET    /admin/registrations/:id`
-- `DELETE /admin/registrations/:id`
+2) Use token for admin endpoints:
+- Header: `Authorization: Bearer <token>`
 
-- `GET    /admin/contacts`
-- `GET    /admin/contacts/:id`
-- `PUT    /admin/contacts/:id`
-- `DELETE /admin/contacts/:id`
+Role rules (see `api/routes/routes.go`):
+- `/admin/*` requires role: `admin` or `superadmin`
+- `/admin/admins*` requires role: `superadmin`
 
-Superadmin:
+## Pagination
+
+List endpoints support:
+- `page` (default 1)
+- `limit` (default 10, max 100)
+
+Response uses:
+```json
+{
+  "items": [],
+  "meta": { "page": 1, "limit": 10, "total": 123 }
+}
+```
+
+---
+
+## Health & Swagger
+
+### GET /healthz
+Response:
+- `200 OK` body: `ok`
+
+### GET /swagger/index.html
+Swagger UI
+
+---
+
+## Public Endpoints
+
+### GET /articles
+Query:
+- `page` (optional)
+- `limit` (optional)
+
+Response `200`:
+```json
+{
+  "status": "success",
+  "message": "articles fetched",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "title": "Example",
+        "content": {},
+        "author": "Admin",
+        "status": "published",
+        "created_at": 1734567890,
+        "updated_at": 1734567890
+      }
+    ],
+    "meta": { "page": 1, "limit": 10, "total": 1 }
+  }
+}
+```
+
+### GET /articles/:id
+Response:
+- `200` success envelope with `data` = article
+- `400` if id invalid
+- `404` if not found / not published
+
+### POST /registrations
+Request body: `dto.RegistrationDTO` (see `internal/dto/registration_dto.go`)
+
+Example request:
+```json
+{
+  "student_type": "new",
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "phone": "081234567890",
+  "gender": "male",
+  "place_of_birth": "Bandung",
+  "date_of_birth": "2007-01-02",
+  "address": "Jl. Contoh No. 1",
+  "origin_school": "SMP Contoh",
+  "nisn": "1234567890",
+  "father_name": "Father",
+  "father_occupation": "Employee",
+  "phone_father": "081234567890",
+  "date_of_birth_father": "1980-01-02",
+  "mother_name": "Mother",
+  "mother_occupation": "Homemaker",
+  "phone_mother": "081234567891",
+  "date_of_birth_mother": "1982-01-02"
+}
+```
+
+Response:
+- `201 Created` (no body)
+
+### POST /contacts
+Request body:
+```json
+{
+  "email": "user@example.com",
+  "subject": "Question",
+  "message": "Hello..."
+}
+```
+
+Response:
+- `201 Created` (no body)
+
+---
+
+## Admin Endpoints (requires BearerAuth)
+
+### GET /admin/profile
+Response `200`:
+```json
+{
+  "status": "success",
+  "message": "profile fetched",
+  "data": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@darulabror.com",
+    "role": "admin",
+    "is_active": true,
+    "created_at": 1734567890,
+    "updated_at": 1734567890
+  }
+}
+```
+
+### Articles (Admin)
+- `GET    /admin/articles` (list draft + published)
+- `POST   /admin/articles` (create)
+- `PUT    /admin/articles/:id` (update)
+- `DELETE /admin/articles/:id` (delete)
+
+Create/Update request body: `dto.ArticleDTO` (see `internal/dto/article_dto.go`)
+
+Create response:
+- `201 Created` (no body)
+
+Update response:
+- `200 OK` (no body)
+
+Delete response:
+- `204 No Content` (no body)
+
+### Registrations (Admin)
+- `GET    /admin/registrations` (list)
+- `GET    /admin/registrations/:id` (detail)
+- `DELETE /admin/registrations/:id` (delete)
+
+### Contacts (Admin)
+- `GET    /admin/contacts` (list)
+- `GET    /admin/contacts/:id` (detail)
+- `PUT    /admin/contacts/:id` (update)
+- `DELETE /admin/contacts/:id` (delete)
+
+---
+
+## Superadmin Endpoints (requires role=superadmin)
+
+### Admin management
 - `POST   /admin/admins`
 - `GET    /admin/admins`
 - `PUT    /admin/admins/:id`
 - `DELETE /admin/admins/:id`
+
+Create/Update body: `dto.AdminDTO` (see `internal/dto/admin_dto.go`)
+Notes:
+- Create requires `password` non-empty (see `internal/handler/admin_handler.go`).
 
 ## Database
 
