@@ -14,4 +14,6 @@ var (
 	// Registration service errors public
 	ErrCreateRegistration = errors.New("failed to create registration")
 	// Registration service errors admin
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrAdminInactive      = errors.New("admin is inactive")
 )

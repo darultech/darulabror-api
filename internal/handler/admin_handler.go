@@ -117,5 +117,38 @@ func (h *AdminHandler) Delete(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// PUBLIC: POST /admin/login
+func (h *AdminHandler) Login(c echo.Context) error {
+	type req struct {
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required,min=6,max=100"`
+	}
+	var body req
+
+	if err := c.Bind(&body); err != nil {
+		return utils.BadRequestResponse(c, "invalid body")
+	}
+	if err := c.Validate(&body); err != nil {
+		return utils.UnprocessableEntityResponse(c, err.Error())
+	}
+
+	token, admin, err := h.svc.AuthenticateAdmin(body.Email, body.Password)
+	if err != nil {
+		switch err {
+		case service.ErrInvalidCredentials:
+			return utils.UnauthorizedResponse(c, "invalid email or password")
+		case service.ErrAdminInactive:
+			return utils.ForbiddenResponse(c, "admin is inactive")
+		default:
+			return utils.InternalServerErrorResponse(c, "failed to login")
+		}
+	}
+
+	return utils.SuccessResponse(c, "login success", map[string]interface{}{
+		"token": token,
+		"admin": admin,
+	})
+}
+
 // (optional) helper supaya compile kalau dipakai di routes
 func allowAdminOrSuperadmin(_ models.Role) bool { return true }

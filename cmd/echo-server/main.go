@@ -97,6 +97,11 @@ func main() {
 	// ======================
 	db := config.ConnectionDb()
 
+	jwtSecret := strings.TrimSpace(os.Getenv("JWT_SECRET"))
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET is required")
+	}
+
 	// ======================
 	// GCS (bucket)
 	// ======================
@@ -128,7 +133,7 @@ func main() {
 	articleSvc := service.NewArticleService(articleRepo, publicStore)
 	regSvc := service.NewRegistrationService(regRepo)
 	contactSvc := service.NewContactService(contactRepo)
-	adminSvc := service.NewAdminService(adminRepo)
+	adminSvc := service.NewAdminService(adminRepo, jwtSecret)
 
 	// ======================
 	// Handlers
