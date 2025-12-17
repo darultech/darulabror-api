@@ -10,6 +10,7 @@ require (
 	github.com/labstack/echo/v4 v4.14.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/echo-swagger v1.4.1
+	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.46.0
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.0
@@ -67,7 +68,6 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
-	github.com/swaggo/swag v1.16.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
