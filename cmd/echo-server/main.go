@@ -36,9 +36,46 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 
-	// Request logging (covers endpoints that return c.NoContent too)
 	e.Use(echomw.RequestID())
 	e.Use(echomw.Recover())
+
+	// CORS (frontend origins) - REQUIRED for production
+	corsOrigins := strings.TrimSpace(os.Getenv("CORS_ORIGINS"))
+	if corsOrigins == "" {
+		log.Fatal("CORS_ORIGINS is required (comma-separated), e.g. https://www.darulabror.com,https://admin.darulabror.com")
+	}
+
+	originsRaw := strings.Split(corsOrigins, ",")
+	allowOrigins := make([]string, 0, len(originsRaw))
+	for _, o := range originsRaw {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			allowOrigins = append(allowOrigins, o)
+		}
+	}
+	if len(allowOrigins) == 0 {
+		log.Fatal("CORS_ORIGINS is invalid (no usable origins after parsing)")
+	}
+
+	e.Use(echomw.CORSWithConfig(echomw.CORSConfig{
+		AllowOrigins: allowOrigins,
+		AllowMethods: []string{
+			echo.GET,
+			echo.POST,
+			echo.PUT,
+			echo.DELETE,
+			echo.OPTIONS,
+		},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
+		AllowCredentials: false,
+	}))
+
+	// Request logging (covers endpoints that return c.NoContent too)
 	e.Use(echomw.Logger())
 
 	// Validator for c.Validate(...)
@@ -118,4 +155,5 @@ func main() {
 	if err := e.Start(":" + port); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
+	_ = ctx
 }
