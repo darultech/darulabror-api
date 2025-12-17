@@ -164,8 +164,13 @@ func main() {
 	routes.Register(e, h)
 
 	// ======================
-	// Swagger UI
+	// Health check (quick sanity check on Cloud Run)
 	// ======================
+	e.GET("/healthz", func(c echo.Context) error {
+		return c.String(200, "ok")
+	})
+
+	// Swagger UI
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// ======================
@@ -175,6 +180,10 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	log.Printf("starting server on :%s", port)
+	log.Printf("swagger UI: /swagger/index.html")
+
 	if err := e.Start(":" + port); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
