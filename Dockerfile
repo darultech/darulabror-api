@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -29,13 +29,5 @@ USER appuser
 
 ENV PORT=8080
 EXPOSE 8080
-
-# Required envs at runtime:
-# - DATABASE_URL
-# - JWT_SECRET
-# - CORS_ORIGINS
-# Optional:
-# - PUBLIC_BUCKET
-# - GOOGLE_APPLICATION_CREDENTIALS (if using GCS; mount the file into container)
 
 ENTRYPOINT ["/app/darulabror-api"]
