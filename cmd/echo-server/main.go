@@ -1,9 +1,21 @@
 package main
 
+// @title Darul Abror API
+// @version 1.0
+// @description Darul Abror backend API (public + admin).
+// @BasePath /
+// @schemes https http
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer <token>"
+
 import (
 	"context"
 	"darulabror/api/routes"
 	"darulabror/config"
+	_ "darulabror/docs"
 	"darulabror/internal/handler"
 	"darulabror/internal/repository"
 	"darulabror/internal/service"
@@ -16,6 +28,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echomw "github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 // CustomValidator enables c.Validate(...) in handlers.
@@ -28,6 +41,9 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 }
 
 func main() {
+	// Force logs to stdout (Cloud Run captures this)
+	log.SetOutput(os.Stdout)
+
 	ctx := context.Background()
 
 	// ======================
@@ -35,9 +51,13 @@ func main() {
 	// ======================
 	e := echo.New()
 	e.HideBanner = true
+	e.Logger.SetOutput(os.Stdout)
 
 	e.Use(echomw.RequestID())
 	e.Use(echomw.Recover())
+
+	// Limit request body (protect from huge uploads)
+	e.Use(echomw.BodyLimit("20M"))
 
 	// CORS (frontend origins) - REQUIRED for production
 	corsOrigins := strings.TrimSpace(os.Getenv("CORS_ORIGINS"))
@@ -97,6 +117,11 @@ func main() {
 	// ======================
 	db := config.ConnectionDb()
 
+	jwtSecret := strings.TrimSpace(os.Getenv("JWT_SECRET"))
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET is required")
+	}
+
 	// ======================
 	// GCS (bucket)
 	// ======================
@@ -128,7 +153,7 @@ func main() {
 	articleSvc := service.NewArticleService(articleRepo, publicStore)
 	regSvc := service.NewRegistrationService(regRepo)
 	contactSvc := service.NewContactService(contactRepo)
-	adminSvc := service.NewAdminService(adminRepo)
+	adminSvc := service.NewAdminService(adminRepo, jwtSecret)
 
 	// ======================
 	// Handlers
@@ -146,12 +171,34 @@ func main() {
 	routes.Register(e, h)
 
 	// ======================
+	// Health check (Cloud Run)
+	// ======================
+	e.GET("/healthz", func(c echo.Context) error {
+		return c.String(200, "ok")
+	})
+	e.HEAD("/healthz", func(c echo.Context) error {
+		return c.NoContent(200)
+	})
+
+	// Existing root
+	e.GET("/", func(c echo.Context) error {
+		return c.String(200, "Darul Abror API")
+	})
+
+	// Swagger UI
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	// ======================
 	// Start
 	// ======================
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
+	log.Printf("starting server on :%s", port)
+	log.Printf("swagger UI: /swagger/index.html")
+
 	if err := e.Start(":" + port); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

@@ -25,6 +25,9 @@ func Register(e *echo.Echo, h Handlers) {
 	e.POST("/registrations", h.Registration.Create)
 	e.POST("/contacts", h.Contact.Create)
 
+	// Admin login (public)
+	e.POST("/admin/login", h.Admin.Login)
+
 	// ======================
 	// Admin routes (/admin)
 	// ======================

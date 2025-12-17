@@ -66,6 +66,33 @@ func sendResponse(c echo.Context, code int, status string, message string, data 
 	return c.JSON(code, resp)
 }
 
+// sendNoContent logs like sendResponse, but returns a proper 204 with no body.
+func sendNoContent(c echo.Context, code int, message string) error {
+	fields := logrus.Fields{
+		"method": c.Request().Method,
+		"path":   c.Request().URL.Path,
+		"status": code,
+	}
+
+	// Admin-only context (set by JWT middleware)
+	if adminID, ok := GetAdminID(c); ok {
+		fields["admin_id"] = adminID
+	}
+	if role, ok := GetRole(c); ok {
+		fields["role"] = role
+	}
+
+	if code >= 500 {
+		logger.WithFields(fields).Error(message)
+	} else if code >= 400 {
+		logger.WithFields(fields).Warn(message)
+	} else {
+		logger.WithFields(fields).Info(message)
+	}
+
+	return c.NoContent(code)
+}
+
 func SuccessResponse(c echo.Context, message string, data interface{}) error {
 	return sendResponse(c, http.StatusOK, "success", message, data)
 }
@@ -75,7 +102,8 @@ func CreatedResponse(c echo.Context, message string, data interface{}) error {
 }
 
 func NoContentResponse(c echo.Context) error {
-	return sendResponse(c, http.StatusNoContent, "success", "No Content", nil)
+	// 204 must not return a body
+	return sendNoContent(c, http.StatusNoContent, "No Content")
 }
 
 func BadRequestResponse(c echo.Context, message string) error {

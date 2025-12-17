@@ -116,6 +116,7 @@ func (s *articleService) UpdateArticle(id uint, articleDTO dto.ArticleDTO) error
 	}
 
 	article.Title = articleDTO.Title
+	article.PhotoHeader = articleDTO.PhotoHeader
 	article.Content = articleDTO.Content
 	article.Author = articleDTO.Author
 	if articleDTO.Status != "" {
