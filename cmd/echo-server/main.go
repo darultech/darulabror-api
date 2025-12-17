@@ -39,13 +39,26 @@ func main() {
 	e.Use(echomw.RequestID())
 	e.Use(echomw.Recover())
 
-	// CORS (frontend origins)
-	corsOrigins := os.Getenv("CORS_ORIGINS")
+	// CORS (frontend origins) - REQUIRED for production
+	corsOrigins := strings.TrimSpace(os.Getenv("CORS_ORIGINS"))
 	if corsOrigins == "" {
-		corsOrigins = "http://localhost:3000,http://localhost:5173"
+		log.Fatal("CORS_ORIGINS is required (comma-separated), e.g. https://www.darulabror.com,https://admin.darulabror.com")
 	}
+
+	originsRaw := strings.Split(corsOrigins, ",")
+	allowOrigins := make([]string, 0, len(originsRaw))
+	for _, o := range originsRaw {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			allowOrigins = append(allowOrigins, o)
+		}
+	}
+	if len(allowOrigins) == 0 {
+		log.Fatal("CORS_ORIGINS is invalid (no usable origins after parsing)")
+	}
+
 	e.Use(echomw.CORSWithConfig(echomw.CORSConfig{
-		AllowOrigins: strings.Split(corsOrigins, ","),
+		AllowOrigins: allowOrigins,
 		AllowMethods: []string{
 			echo.GET,
 			echo.POST,
@@ -59,7 +72,6 @@ func main() {
 			echo.HeaderAccept,
 			echo.HeaderAuthorization,
 		},
-		// Set true if cookies needed
 		AllowCredentials: false,
 	}))
 
