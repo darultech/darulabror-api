@@ -15,6 +15,7 @@ import (
 	"context"
 	"darulabror/api/routes"
 	"darulabror/config"
+	_ "darulabror/docs"
 	"darulabror/internal/handler"
 	"darulabror/internal/repository"
 	"darulabror/internal/service"
@@ -27,6 +28,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echomw "github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 // CustomValidator enables c.Validate(...) in handlers.
@@ -160,6 +162,11 @@ func main() {
 	// Routes
 	// ======================
 	routes.Register(e, h)
+
+	// ======================
+	// Swagger UI
+	// ======================
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// ======================
 	// Start

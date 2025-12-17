@@ -1,0 +1,1205 @@
+basePath: /
+definitions:
+  darulabror_internal_dto.AdminDTO:
+    properties:
+      created_at:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      password:
+        maxLength: 50
+        minLength: 6
+        type: string
+      role:
+        enum:
+        - admin
+        - superadmin
+        type: string
+      updated_at:
+        type: integer
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - is_active
+    - role
+    - username
+    type: object
+  darulabror_internal_dto.ArticleDTO:
+    properties:
+      author:
+        maxLength: 50
+        minLength: 3
+        type: string
+      content:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: integer
+      id:
+        type: integer
+      status:
+        enum:
+        - draft
+        - published
+        type: string
+      title:
+        maxLength: 100
+        minLength: 3
+        type: string
+      updated_at:
+        type: integer
+    required:
+    - author
+    - content
+    - title
+    type: object
+  darulabror_internal_dto.RegistrationDTO:
+    properties:
+      address:
+        maxLength: 255
+        minLength: 3
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_birth_father:
+        type: string
+      date_of_birth_mother:
+        type: string
+      email:
+        type: string
+      father_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      father_occupation:
+        maxLength: 100
+        minLength: 3
+        type: string
+      full_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      gender:
+        allOf:
+        - $ref: '#/definitions/darulabror_internal_models.Gender'
+        enum:
+        - male
+        - female
+      id:
+        type: integer
+      mother_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      mother_occupation:
+        maxLength: 100
+        minLength: 3
+        type: string
+      nisn:
+        type: string
+      origin_school:
+        maxLength: 100
+        minLength: 3
+        type: string
+      phone:
+        maxLength: 13
+        minLength: 10
+        type: string
+      phone_father:
+        maxLength: 13
+        minLength: 10
+        type: string
+      phone_mother:
+        maxLength: 13
+        minLength: 10
+        type: string
+      place_of_birth:
+        maxLength: 100
+        minLength: 3
+        type: string
+      student_type:
+        allOf:
+        - $ref: '#/definitions/darulabror_internal_models.StudentType'
+        enum:
+        - new
+        - transfer
+    required:
+    - address
+    - date_of_birth
+    - date_of_birth_father
+    - date_of_birth_mother
+    - email
+    - father_name
+    - father_occupation
+    - full_name
+    - gender
+    - mother_name
+    - mother_occupation
+    - nisn
+    - origin_school
+    - phone
+    - phone_father
+    - phone_mother
+    - place_of_birth
+    - student_type
+    type: object
+  darulabror_internal_models.Gender:
+    enum:
+    - male
+    - female
+    type: string
+    x-enum-varnames:
+    - Male
+    - Female
+  darulabror_internal_models.StudentType:
+    enum:
+    - new
+    - transfer
+    type: string
+    x-enum-varnames:
+    - StudentNew
+    - StudentTransfer
+  internal_handler.AdminListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_handler.ListResponseData-darulabror_internal_dto_AdminDTO'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.AdminLoginRequest:
+    properties:
+      email:
+        example: admin@darulabror.com
+        type: string
+      password:
+        example: StrongPassword123
+        maxLength: 100
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_handler.AdminLoginResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_handler.AdminLoginResponseData'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.AdminLoginResponseData:
+    properties:
+      admin:
+        $ref: '#/definitions/darulabror_internal_dto.AdminDTO'
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  internal_handler.ArticleListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_handler.ListResponseData-darulabror_internal_dto_ArticleDTO'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.ContactCreateRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      message:
+        example: Hello, I would like to ask...
+        maxLength: 2000
+        minLength: 3
+        type: string
+      subject:
+        example: Question about registration
+        maxLength: 150
+        minLength: 3
+        type: string
+    required:
+    - email
+    - message
+    - subject
+    type: object
+  internal_handler.ContactListItem:
+    properties:
+      created_at:
+        example: 1734567890
+        type: integer
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      message:
+        example: Hello...
+        type: string
+      subject:
+        example: Question
+        type: string
+    type: object
+  internal_handler.ContactListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_handler.ListResponseData-internal_handler_ContactListItem'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.ContactUpdateRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      message:
+        example: Hello, I would like to ask...
+        maxLength: 2000
+        minLength: 3
+        type: string
+      subject:
+        example: Question about registration
+        maxLength: 150
+        minLength: 3
+        type: string
+    required:
+    - email
+    - message
+    - subject
+    type: object
+  internal_handler.ErrorResponse:
+    properties:
+      message:
+        example: something went wrong
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  internal_handler.ListResponseData-darulabror_internal_dto_AdminDTO:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/darulabror_internal_dto.AdminDTO'
+        type: array
+      meta:
+        $ref: '#/definitions/internal_handler.PaginationMeta'
+    type: object
+  internal_handler.ListResponseData-darulabror_internal_dto_ArticleDTO:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/darulabror_internal_dto.ArticleDTO'
+        type: array
+      meta:
+        $ref: '#/definitions/internal_handler.PaginationMeta'
+    type: object
+  internal_handler.ListResponseData-darulabror_internal_dto_RegistrationDTO:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/darulabror_internal_dto.RegistrationDTO'
+        type: array
+      meta:
+        $ref: '#/definitions/internal_handler.PaginationMeta'
+    type: object
+  internal_handler.ListResponseData-internal_handler_ContactListItem:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_handler.ContactListItem'
+        type: array
+      meta:
+        $ref: '#/definitions/internal_handler.PaginationMeta'
+    type: object
+  internal_handler.PaginationMeta:
+    properties:
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 123
+        type: integer
+    type: object
+  internal_handler.RegistrationListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/internal_handler.ListResponseData-darulabror_internal_dto_RegistrationDTO'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.SuccessResponse-darulabror_internal_dto_AdminDTO:
+    properties:
+      data:
+        $ref: '#/definitions/darulabror_internal_dto.AdminDTO'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.SuccessResponse-darulabror_internal_dto_ArticleDTO:
+    properties:
+      data:
+        $ref: '#/definitions/darulabror_internal_dto.ArticleDTO'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.SuccessResponse-darulabror_internal_dto_RegistrationDTO:
+    properties:
+      data:
+        $ref: '#/definitions/darulabror_internal_dto.RegistrationDTO'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  internal_handler.SuccessResponse-internal_handler_ContactListItem:
+    properties:
+      data:
+        $ref: '#/definitions/internal_handler.ContactListItem'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Darul Abror backend API (public + admin).
+  title: Darul Abror API
+  version: "1.0"
+paths:
+  /admin/admins:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.AdminListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Superadmin list admins
+      tags:
+      - Admins (Superadmin)
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Admin payload (password required)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/darulabror_internal_dto.AdminDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Superadmin create admin
+      tags:
+      - Admins (Superadmin)
+  /admin/admins/{id}:
+    delete:
+      parameters:
+      - description: Admin ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Superadmin delete admin
+      tags:
+      - Admins (Superadmin)
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Admin ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Admin payload (password optional)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/darulabror_internal_dto.AdminDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Superadmin update admin
+      tags:
+      - Admins (Superadmin)
+  /admin/articles:
+    get:
+      description: Returns draft + published.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ArticleListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin list all articles
+      tags:
+      - Articles (Admin)
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Article payload (status optional; defaults to draft)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/darulabror_internal_dto.ArticleDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin create article
+      tags:
+      - Articles (Admin)
+  /admin/articles/{id}:
+    delete:
+      parameters:
+      - description: Article ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin delete article
+      tags:
+      - Articles (Admin)
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Article ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Article payload (set status=published to publish)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/darulabror_internal_dto.ArticleDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin update article
+      tags:
+      - Articles (Admin)
+  /admin/contacts:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ContactListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin list contacts
+      tags:
+      - Contacts (Admin)
+  /admin/contacts/{id}:
+    delete:
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin delete contact
+      tags:
+      - Contacts (Admin)
+    get:
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.SuccessResponse-internal_handler_ContactListItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin get contact by ID
+      tags:
+      - Contacts (Admin)
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Contact payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.ContactUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin update contact
+      tags:
+      - Contacts (Admin)
+  /admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Returns JWT token for accessing /admin endpoints.
+      parameters:
+      - description: Login payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.AdminLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.AdminLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Admin login
+      tags:
+      - Auth (Admin)
+  /admin/profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.SuccessResponse-darulabror_internal_dto_AdminDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get admin profile (from JWT)
+      tags:
+      - Admins (Admin)
+  /admin/registrations:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.RegistrationListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin list registrations
+      tags:
+      - Registrations (Admin)
+  /admin/registrations/{id}:
+    delete:
+      parameters:
+      - description: Registration ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin delete registration
+      tags:
+      - Registrations (Admin)
+    get:
+      parameters:
+      - description: Registration ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.SuccessResponse-darulabror_internal_dto_RegistrationDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin get registration by ID
+      tags:
+      - Registrations (Admin)
+  /articles:
+    get:
+      description: Returns only articles with status "published".
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ArticleListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: List published articles
+      tags:
+      - Articles (Public)
+  /articles/{id}:
+    get:
+      parameters:
+      - description: Article ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.SuccessResponse-darulabror_internal_dto_ArticleDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Get published article by ID
+      tags:
+      - Articles (Public)
+  /contacts:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contact payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.ContactCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Create contact message
+      tags:
+      - Contacts (Public)
+  /registrations:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/darulabror_internal_dto.RegistrationDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Create registration
+      tags:
+      - Registrations (Public)
+schemes:
+- https
+- http
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer <token>"
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

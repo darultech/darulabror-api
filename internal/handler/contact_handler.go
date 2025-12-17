@@ -90,7 +90,7 @@ func (h *ContactHandler) AdminList(c echo.Context) error {
 // @Security BearerAuth
 // @Produce json
 // @Param id path int true "Contact ID" minimum(1)
-// @Success 200 {object} SuccessResponse[models.Contact]
+// @Success 200 {object} SuccessResponse[ContactListItem]
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
