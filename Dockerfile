@@ -23,6 +23,11 @@ WORKDIR /app
 
 RUN apk add --no-cache ca-certificates tzdata && adduser -D -H -u 10001 appuser
 
+# Make /tmp writable and set HOME there
+ENV HOME=/tmp
+ENV GOCACHE=/tmp/gocache
+ENV GOMODCACHE=/tmp/gomodcache
+
 COPY --from=builder /app/bin/darulabror-api /app/darulabror-api
 
 USER appuser
