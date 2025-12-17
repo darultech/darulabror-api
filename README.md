@@ -77,48 +77,47 @@ That means the backend does **not** enforce a fixed schema for article body cont
   "blocks": [
     { "type": "heading", "level": 2, "text": "Judul" },
     { "type": "paragraph", "text": "Teks panjang..." },
-    { "type": "image", "url": "https://storage.googleapis.com/<bucket>/articles/xxx.jpg", "caption": "..." },
-    { "type": "video", "url": "https://storage.googleapis.com/<bucket>/articles/yyy.mp4" }
+    { "type": "image", "url": "https://example.com/image.jpg", "caption": "..." },
+    { "type": "video", "url": "https://example.com/video.mp4" }
   ]
 }
 ```
 
 Important:
-- File binary (image/video) **is not stored inside `content`**.
-- Store only **URLs** (or object names) returned by the media upload endpoint.
+- Binary file (image/video) **is not stored inside `content`**.
+- `content` should store **URLs** (or any reference you decide) that the frontend can render.
+- This project currently supports **uploading only the article header image** via the create/update endpoints (see below).
 
 ### `photo_header`
-`photo_header` is intended for the article card/cover image (thumbnail/banner). It should be a URL string.
+`photo_header` is intended for the article card/cover image (thumbnail/banner).
+It can be:
+- a URL string you provide (`photo_header` form field), OR
+- automatically set by uploading a file (`photo_header_file`)
 
 ---
 
-## Media Upload (images/videos)
+## Admin Articles (multipart/form-data)
 
-### POST /admin/articles/media (Admin)
-Uploads a file to storage and returns a URL (public bucket) that you can put into:
-- `photo_header`
-- `content` JSON (e.g., image/video blocks)
+### POST /admin/articles
+Create article using `multipart/form-data`.
 
-Swagger: see `Articles (Admin) -> POST /admin/articles/media`
+Fields:
+- `title` (string, required)
+- `author` (string, required)
+- `status` (string, optional: `draft|published`)
+- `content` (string, required) → **must be valid JSON string**
+- `photo_header` (string, optional) → header URL
+- `photo_header_file` (file, optional) → upload header file; overrides `photo_header`
 
-Request:
-- `multipart/form-data`
-- field name: `file`
+Response:
+- `201 Created` (no body)
 
-Response `201` (example):
-```json
-{
-  "status": "success",
-  "message": "media uploaded",
-  "data": {
-    "url": "https://storage.googleapis.com/<bucket>/articles/12345_file.jpg"
-  }
-}
-```
+Requirements for `photo_header_file` upload:
+- Set `PUBLIC_BUCKET` env var in server runtime (GCS). If not configured, upload will fail.
 
-Requirements:
-- Set `PUBLIC_BUCKET` env var in the server runtime to enable GCS uploads.
-- If `PUBLIC_BUCKET` is empty / GCS not configured, upload will fail.
+### PUT /admin/articles/:id
+Same fields/behavior as create (multipart). Response:
+- `200 OK` (no body)
 
 ---
 
@@ -150,7 +149,7 @@ Response `200`:
       {
         "id": 1,
         "title": "Example",
-        "photo_header": "https://storage.googleapis.com/<bucket>/articles/header.jpg",
+        "photo_header": "https://example.com/header.jpg",
         "content": {},
         "author": "Admin",
         "status": "published",
@@ -171,31 +170,6 @@ Response:
 
 ### POST /registrations
 Request body: `dto.RegistrationDTO` (see `internal/dto/registration_dto.go`)
-
-Example request:
-```json
-{
-  "student_type": "new",
-  "full_name": "John Doe",
-  "email": "john@example.com",
-  "phone": "081234567890",
-  "gender": "male",
-  "place_of_birth": "Bandung",
-  "date_of_birth": "2007-01-02",
-  "address": "Jl. Contoh No. 1",
-  "origin_school": "SMP Contoh",
-  "nisn": "1234567890",
-  "father_name": "Father",
-  "father_occupation": "Employee",
-  "phone_father": "081234567890",
-  "date_of_birth_father": "1980-01-02",
-  "mother_name": "Mother",
-  "mother_occupation": "Homemaker",
-  "phone_mother": "081234567891",
-  "date_of_birth_mother": "1982-01-02"
-}
-```
-
 Response:
 - `201 Created` (no body)
 
@@ -208,78 +182,10 @@ Request body:
   "message": "Hello..."
 }
 ```
-
 Response:
 - `201 Created` (no body)
 
 ---
-
-## Admin Endpoints (requires BearerAuth)
-
-### GET /admin/profile
-Response `200`:
-```json
-{
-  "status": "success",
-  "message": "profile fetched",
-  "data": {
-    "id": 1,
-    "username": "admin",
-    "email": "admin@darulabror.com",
-    "role": "admin",
-    "is_active": true,
-    "created_at": 1734567890,
-    "updated_at": 1734567890
-  }
-}
-```
-
-### Articles (Admin)
-- `GET    /admin/articles` (list draft + published)
-- `POST   /admin/articles` (create)
-- `PUT    /admin/articles/:id` (update)
-- `DELETE /admin/articles/:id` (delete)
-- `POST   /admin/articles/media` (upload image/video for `photo_header` or `content`)
-
-Create/Update request body: `dto.ArticleDTO` (see `internal/dto/article_dto.go`)
-
-Create response:
-- `201 Created` (no body)
-
-Update response:
-- `200 OK` (no body)
-
-Delete response:
-- `204 No Content` (no body)
-
-### Registrations (Admin)
-- `GET    /admin/registrations` (list)
-- `GET    /admin/registrations/:id` (detail)
-- `DELETE /admin/registrations/:id` (delete)
-
-### Contacts (Admin)
-- `GET    /admin/contacts` (list)
-- `GET    /admin/contacts/:id` (detail)
-- `PUT    /admin/contacts/:id` (update)
-- `DELETE /admin/contacts/:id` (delete)
-
----
-
-## Superadmin Endpoints (requires role=superadmin)
-
-### Admin management
-- `POST   /admin/admins`
-- `GET    /admin/admins`
-- `PUT    /admin/admins/:id`
-- `DELETE /admin/admins/:id`
-
-Create/Update body: `dto.AdminDTO` (see `internal/dto/admin_dto.go`)
-Notes:
-- Create requires `password` non-empty (see `internal/handler/admin_handler.go`).
-
-## Database
-
-A PostgreSQL-compatible SQL schema is provided in `migrations/init.sql`.
 
 ## License
 MIT. See [LICENSE](LICENSE).

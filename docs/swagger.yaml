@@ -408,21 +408,6 @@ definitions:
         example: success
         type: string
     type: object
-  internal_handler.SuccessResponse-map_string_string:
-    properties:
-      data:
-        $ref: '#/definitions/map_string_string'
-      message:
-        example: OK
-        type: string
-      status:
-        example: success
-        type: string
-    type: object
-  map_string_string:
-    additionalProperties:
-      type: string
-    type: object
 info:
   contact: {}
   description: Darul Abror backend API (public + admin).
@@ -633,14 +618,38 @@ paths:
       - Articles (Admin)
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       parameters:
-      - description: Article payload (status optional; defaults to draft)
-        in: body
-        name: request
+      - description: Title
+        in: formData
+        name: title
         required: true
-        schema:
-          $ref: '#/definitions/darulabror_internal_dto.ArticleDTO'
+        type: string
+      - description: Author
+        in: formData
+        name: author
+        required: true
+        type: string
+      - description: draft|published
+        enum:
+        - draft
+        - published
+        in: formData
+        name: status
+        type: string
+      - description: JSON string (flexible)
+        in: formData
+        name: content
+        required: true
+        type: string
+      - description: Optional header URL (ignored if photo_header_file is provided)
+        in: formData
+        name: photo_header
+        type: string
+      - description: Optional header image file (uploaded and set to photo_header)
+        in: formData
+        name: photo_header_file
+        type: file
       produces:
       - application/json
       responses:
@@ -670,7 +679,7 @@ paths:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Admin create article
+      summary: Admin create article (multipart)
       tags:
       - Articles (Admin)
   /admin/articles/{id}:
@@ -712,7 +721,7 @@ paths:
       - Articles (Admin)
     put:
       consumes:
-      - application/json
+      - multipart/form-data
       parameters:
       - description: Article ID
         in: path
@@ -720,12 +729,36 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Article payload (set status=published to publish)
-        in: body
-        name: request
+      - description: Title
+        in: formData
+        name: title
         required: true
-        schema:
-          $ref: '#/definitions/darulabror_internal_dto.ArticleDTO'
+        type: string
+      - description: Author
+        in: formData
+        name: author
+        required: true
+        type: string
+      - description: draft|published
+        enum:
+        - draft
+        - published
+        in: formData
+        name: status
+        type: string
+      - description: JSON string (flexible)
+        in: formData
+        name: content
+        required: true
+        type: string
+      - description: Optional header URL (ignored if photo_header_file is provided)
+        in: formData
+        name: photo_header
+        type: string
+      - description: Optional header image file (uploaded and set to photo_header)
+        in: formData
+        name: photo_header_file
+        type: file
       produces:
       - application/json
       responses:
@@ -755,47 +788,7 @@ paths:
             $ref: '#/definitions/internal_handler.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Admin update article
-      tags:
-      - Articles (Admin)
-  /admin/articles/media:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Upload a file to storage. Use returned URL inside `content` JSON
-        (blocks) or `photo_header`.
-      parameters:
-      - description: Media file
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/internal_handler.SuccessResponse-map_string_string'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Admin upload article media (image/video)
+      summary: Admin update article (multipart)
       tags:
       - Articles (Admin)
   /admin/contacts:

@@ -4,6 +4,7 @@ import (
 	"darulabror/internal/dto"
 	"darulabror/internal/service"
 	"darulabror/internal/utils"
+	"encoding/json"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -108,12 +109,17 @@ func (h *ArticleHandler) AdminListAll(c echo.Context) error {
 
 // ADMIN: POST /admin/articles
 // AdminCreate godoc
-// @Summary Admin create article
+// @Summary Admin create article (multipart)
 // @Tags Articles (Admin)
 // @Security BearerAuth
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
-// @Param request body dto.ArticleDTO true "Article payload (status optional; defaults to draft)"
+// @Param title formData string true "Title"
+// @Param author formData string true "Author"
+// @Param status formData string false "draft|published" Enums(draft,published)
+// @Param content formData string true "JSON string (flexible)"
+// @Param photo_header formData string false "Optional header URL (ignored if photo_header_file is provided)"
+// @Param photo_header_file formData file false "Optional header image file (uploaded and set to photo_header)"
 // @Success 201 {string} string "Created"
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
@@ -122,10 +128,45 @@ func (h *ArticleHandler) AdminListAll(c echo.Context) error {
 // @Failure 500 {object} ErrorResponse
 // @Router /admin/articles [post]
 func (h *ArticleHandler) AdminCreate(c echo.Context) error {
-	var body dto.ArticleDTO
-	if err := c.Bind(&body); err != nil {
-		return utils.BadRequestResponse(c, "invalid body")
+	title := c.FormValue("title")
+	author := c.FormValue("author")
+	status := c.FormValue("status")
+	contentStr := c.FormValue("content")
+
+	if title == "" || author == "" || contentStr == "" {
+		return utils.BadRequestResponse(c, "missing required fields: title, author, content")
 	}
+	if !json.Valid([]byte(contentStr)) {
+		return utils.BadRequestResponse(c, "content must be valid JSON string")
+	}
+
+	body := dto.ArticleDTO{
+		Title:       title,
+		Author:      author,
+		Status:      status,
+		Content:     []byte(contentStr),
+		PhotoHeader: c.FormValue("photo_header"),
+	}
+
+	// Optional header upload: if provided, overrides photo_header string
+	if fh, err := c.FormFile("photo_header_file"); err == nil && fh != nil {
+		src, err := fh.Open()
+		if err != nil {
+			return utils.BadRequestResponse(c, "failed to open photo_header_file")
+		}
+		defer src.Close()
+
+		safeName := filepath.Base(fh.Filename)
+		objectName := "articles/header_" + strconv.FormatInt(time.Now().UnixNano(), 10) + "_" + safeName
+
+		urlOrObject, err := h.svc.UploadArticleMedia(c.Request().Context(), src, objectName)
+		if err != nil {
+			logrus.WithError(err).Error("failed upload photo_header_file")
+			return utils.InternalServerErrorResponse(c, err.Error())
+		}
+		body.PhotoHeader = urlOrObject
+	}
+
 	if err := c.Validate(&body); err != nil {
 		return utils.UnprocessableEntityResponse(c, err.Error())
 	}
@@ -138,13 +179,18 @@ func (h *ArticleHandler) AdminCreate(c echo.Context) error {
 
 // ADMIN: PUT /admin/articles/:id
 // AdminUpdate godoc
-// @Summary Admin update article
+// @Summary Admin update article (multipart)
 // @Tags Articles (Admin)
 // @Security BearerAuth
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Param id path int true "Article ID" minimum(1)
-// @Param request body dto.ArticleDTO true "Article payload (set status=published to publish)"
+// @Param title formData string true "Title"
+// @Param author formData string true "Author"
+// @Param status formData string false "draft|published" Enums(draft,published)
+// @Param content formData string true "JSON string (flexible)"
+// @Param photo_header formData string false "Optional header URL (ignored if photo_header_file is provided)"
+// @Param photo_header_file formData file false "Optional header image file (uploaded and set to photo_header)"
 // @Success 200 {string} string "OK"
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
@@ -158,10 +204,45 @@ func (h *ArticleHandler) AdminUpdate(c echo.Context) error {
 		return utils.BadRequestResponse(c, "invalid id")
 	}
 
-	var body dto.ArticleDTO
-	if err := c.Bind(&body); err != nil {
-		return utils.BadRequestResponse(c, "invalid body")
+	title := c.FormValue("title")
+	author := c.FormValue("author")
+	status := c.FormValue("status")
+	contentStr := c.FormValue("content")
+
+	if title == "" || author == "" || contentStr == "" {
+		return utils.BadRequestResponse(c, "missing required fields: title, author, content")
 	}
+	if !json.Valid([]byte(contentStr)) {
+		return utils.BadRequestResponse(c, "content must be valid JSON string")
+	}
+
+	body := dto.ArticleDTO{
+		Title:       title,
+		Author:      author,
+		Status:      status,
+		Content:     []byte(contentStr),
+		PhotoHeader: c.FormValue("photo_header"),
+	}
+
+	// Optional header upload: if provided, overrides photo_header string
+	if fh, err := c.FormFile("photo_header_file"); err == nil && fh != nil {
+		src, err := fh.Open()
+		if err != nil {
+			return utils.BadRequestResponse(c, "failed to open photo_header_file")
+		}
+		defer src.Close()
+
+		safeName := filepath.Base(fh.Filename)
+		objectName := "articles/header_" + strconv.FormatInt(time.Now().UnixNano(), 10) + "_" + safeName
+
+		urlOrObject, err := h.svc.UploadArticleMedia(c.Request().Context(), src, objectName)
+		if err != nil {
+			logrus.WithError(err).Error("failed upload photo_header_file")
+			return utils.InternalServerErrorResponse(c, err.Error())
+		}
+		body.PhotoHeader = urlOrObject
+	}
+
 	if err := c.Validate(&body); err != nil {
 		return utils.UnprocessableEntityResponse(c, err.Error())
 	}
@@ -192,48 +273,9 @@ func (h *ArticleHandler) AdminDelete(c echo.Context) error {
 	}
 
 	if err := h.svc.DeleteArticle(uint(id64)); err != nil {
+		logrus.WithError(err).WithField("id", id64).Error("failed delete article")
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
+
 	return c.NoContent(http.StatusNoContent)
-}
-
-// ADMIN: POST /admin/articles/media
-// AdminUploadMedia godoc
-// @Summary Admin upload article media (image/video)
-// @Description Upload a file to storage. Use returned URL inside `content` JSON (blocks) or `photo_header`.
-// @Tags Articles (Admin)
-// @Security BearerAuth
-// @Accept multipart/form-data
-// @Produce json
-// @Param file formData file true "Media file"
-// @Success 201 {object} SuccessResponse[map[string]string]
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 403 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /admin/articles/media [post]
-func (h *ArticleHandler) AdminUploadMedia(c echo.Context) error {
-	fh, err := c.FormFile("file")
-	if err != nil {
-		return utils.BadRequestResponse(c, "missing file")
-	}
-
-	src, err := fh.Open()
-	if err != nil {
-		return utils.BadRequestResponse(c, "failed to open file")
-	}
-	defer src.Close()
-
-	// Simple unique-ish name
-	safeName := filepath.Base(fh.Filename)
-	objectName := "articles/" + strconv.FormatInt(time.Now().UnixNano(), 10) + "_" + safeName
-
-	urlOrObject, err := h.svc.UploadArticleMedia(c.Request().Context(), src, objectName)
-	if err != nil {
-		return utils.InternalServerErrorResponse(c, err.Error())
-	}
-
-	return utils.CreatedResponse(c, "media uploaded", map[string]string{
-		"url": urlOrObject,
-	})
 }

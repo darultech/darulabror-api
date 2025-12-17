@@ -336,7 +336,7 @@ const docTemplate = `{
                     }
                 ],
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -344,16 +344,50 @@ const docTemplate = `{
                 "tags": [
                     "Articles (Admin)"
                 ],
-                "summary": "Admin create article",
+                "summary": "Admin create article (multipart)",
                 "parameters": [
                     {
-                        "description": "Article payload (status optional; defaults to draft)",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/darulabror_internal_dto.ArticleDTO"
-                        }
+                        "type": "string",
+                        "description": "Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Author",
+                        "name": "author",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "draft",
+                            "published"
+                        ],
+                        "type": "string",
+                        "description": "draft|published",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string (flexible)",
+                        "name": "content",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional header URL (ignored if photo_header_file is provided)",
+                        "name": "photo_header",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Optional header image file (uploaded and set to photo_header)",
+                        "name": "photo_header_file",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -396,14 +430,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/articles/media": {
-            "post": {
+        "/admin/articles/{id}": {
+            "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Upload a file to storage. Use returned URL inside ` + "`" + `content` + "`" + ` JSON (blocks) or ` + "`" + `photo_header` + "`" + `.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -413,67 +446,7 @@ const docTemplate = `{
                 "tags": [
                     "Articles (Admin)"
                 ],
-                "summary": "Admin upload article media (image/video)",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "Media file",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.SuccessResponse-map_string_string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/articles/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Articles (Admin)"
-                ],
-                "summary": "Admin update article",
+                "summary": "Admin update article (multipart)",
                 "parameters": [
                     {
                         "minimum": 1,
@@ -484,13 +457,47 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Article payload (set status=published to publish)",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/darulabror_internal_dto.ArticleDTO"
-                        }
+                        "type": "string",
+                        "description": "Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Author",
+                        "name": "author",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "draft",
+                            "published"
+                        ],
+                        "type": "string",
+                        "description": "draft|published",
+                        "name": "status",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON string (flexible)",
+                        "name": "content",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Optional header URL (ignored if photo_header_file is provided)",
+                        "name": "photo_header",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Optional header image file (uploaded and set to photo_header)",
+                        "name": "photo_header_file",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -1864,28 +1871,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "success"
                 }
-            }
-        },
-        "internal_handler.SuccessResponse-map_string_string": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/map_string_string"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "OK"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "success"
-                }
-            }
-        },
-        "map_string_string": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "string"
             }
         }
     },
