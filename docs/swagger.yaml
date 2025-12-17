@@ -45,6 +45,9 @@ definitions:
         type: integer
       id:
         type: integer
+      photo_header:
+        maxLength: 2000
+        type: string
       status:
         enum:
         - draft
@@ -405,6 +408,21 @@ definitions:
         example: success
         type: string
     type: object
+  internal_handler.SuccessResponse-map_string_string:
+    properties:
+      data:
+        $ref: '#/definitions/map_string_string'
+      message:
+        example: OK
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  map_string_string:
+    additionalProperties:
+      type: string
+    type: object
 info:
   contact: {}
   description: Darul Abror backend API (public + admin).
@@ -738,6 +756,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Admin update article
+      tags:
+      - Articles (Admin)
+  /admin/articles/media:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to storage. Use returned URL inside `content` JSON
+        (blocks) or `photo_header`.
+      parameters:
+      - description: Media file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_handler.SuccessResponse-map_string_string'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin upload article media (image/video)
       tags:
       - Articles (Admin)
   /admin/contacts:

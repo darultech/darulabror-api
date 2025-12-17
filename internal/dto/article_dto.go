@@ -7,11 +7,12 @@ import (
 )
 
 type ArticleDTO struct {
-	ID      uint           `json:"id" validate:"omitempty"`
-	Title   string         `json:"title" validate:"required,min=3,max=100"`
-	Content datatypes.JSON `json:"content" validate:"required"`
-	Author  string         `json:"author" validate:"required,min=3,max=50"`
-	Status  string         `json:"status" validate:"omitempty,oneof=draft published"`
+	ID          uint           `json:"id" validate:"omitempty"`
+	Title       string         `json:"title" validate:"required,min=3,max=100"`
+	PhotoHeader string         `json:"photo_header" validate:"omitempty,max=2000"`
+	Content     datatypes.JSON `json:"content" validate:"required"`
+	Author      string         `json:"author" validate:"required,min=3,max=50"`
+	Status      string         `json:"status" validate:"omitempty,oneof=draft published"`
 
 	CreatedAt int64 `json:"created_at,omitempty"`
 	UpdatedAt int64 `json:"updated_at,omitempty"`
@@ -19,21 +20,23 @@ type ArticleDTO struct {
 
 func ArticleDTOToModel(dto ArticleDTO) (models.Article, error) {
 	return models.Article{
-		Title:   dto.Title,
-		Content: dto.Content,
-		Author:  dto.Author,
-		Status:  dto.Status,
+		Title:       dto.Title,
+		PhotoHeader: dto.PhotoHeader,
+		Content:     dto.Content,
+		Author:      dto.Author,
+		Status:      dto.Status,
 	}, nil
 }
 
 func ArticleModelToDTO(article models.Article) ArticleDTO {
 	return ArticleDTO{
-		ID:        article.ID,
-		Title:     article.Title,
-		Content:   article.Content,
-		Author:    article.Author,
-		Status:    article.Status,
-		CreatedAt: article.CreatedAt,
-		UpdatedAt: article.UpdatedAt,
+		ID:          article.ID,
+		Title:       article.Title,
+		PhotoHeader: article.PhotoHeader,
+		Content:     article.Content,
+		Author:      article.Author,
+		Status:      article.Status,
+		CreatedAt:   article.CreatedAt,
+		UpdatedAt:   article.UpdatedAt,
 	}
 }

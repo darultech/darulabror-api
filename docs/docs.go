@@ -396,6 +396,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/articles/media": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a file to storage. Use returned URL inside ` + "`" + `content` + "`" + ` JSON (blocks) or ` + "`" + `photo_header` + "`" + `.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Articles (Admin)"
+                ],
+                "summary": "Admin upload article media (image/video)",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Media file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.SuccessResponse-map_string_string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/articles/{id}": {
             "put": {
                 "security": [
@@ -1301,6 +1362,10 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "photo_header": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -1799,6 +1864,28 @@ const docTemplate = `{
                     "type": "string",
                     "example": "success"
                 }
+            }
+        },
+        "internal_handler.SuccessResponse-map_string_string": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/map_string_string"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "OK"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "map_string_string": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
             }
         }
     },

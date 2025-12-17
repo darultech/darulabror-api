@@ -5,7 +5,9 @@ import (
 	"darulabror/internal/service"
 	"darulabror/internal/utils"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
@@ -193,4 +195,45 @@ func (h *ArticleHandler) AdminDelete(c echo.Context) error {
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+// ADMIN: POST /admin/articles/media
+// AdminUploadMedia godoc
+// @Summary Admin upload article media (image/video)
+// @Description Upload a file to storage. Use returned URL inside `content` JSON (blocks) or `photo_header`.
+// @Tags Articles (Admin)
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "Media file"
+// @Success 201 {object} SuccessResponse[map[string]string]
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/articles/media [post]
+func (h *ArticleHandler) AdminUploadMedia(c echo.Context) error {
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return utils.BadRequestResponse(c, "missing file")
+	}
+
+	src, err := fh.Open()
+	if err != nil {
+		return utils.BadRequestResponse(c, "failed to open file")
+	}
+	defer src.Close()
+
+	// Simple unique-ish name
+	safeName := filepath.Base(fh.Filename)
+	objectName := "articles/" + strconv.FormatInt(time.Now().UnixNano(), 10) + "_" + safeName
+
+	urlOrObject, err := h.svc.UploadArticleMedia(c.Request().Context(), src, objectName)
+	if err != nil {
+		return utils.InternalServerErrorResponse(c, err.Error())
+	}
+
+	return utils.CreatedResponse(c, "media uploaded", map[string]string{
+		"url": urlOrObject,
+	})
 }

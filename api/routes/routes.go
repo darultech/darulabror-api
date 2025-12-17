@@ -41,6 +41,9 @@ func Register(e *echo.Echo, h Handlers) {
 	admin.PUT("/articles/:id", h.Article.AdminUpdate)
 	admin.DELETE("/articles/:id", h.Article.AdminDelete)
 
+	// upload media for article content/photo header
+	admin.POST("/articles/media", h.Article.AdminUploadMedia)
+
 	// manage registrations
 	admin.GET("/registrations", h.Registration.AdminList)
 	admin.GET("/registrations/:id", h.Registration.AdminGetByID)
