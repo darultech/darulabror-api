@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS registrations (
 
     student_type TEXT NOT NULL CHECK (student_type IN ('new','transfer')),
     gender TEXT NOT NULL CHECK (gender IN ('male','female')),
+    status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','validate','process','done')),
 
     email TEXT NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
@@ -60,5 +61,6 @@ CREATE TABLE IF NOT EXISTS contacts (
     email TEXT NOT NULL,
     subject TEXT NOT NULL,
     message TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','in_progress','done')),
     created_at BIGINT NOT NULL
 );

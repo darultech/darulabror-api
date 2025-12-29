@@ -2,6 +2,7 @@ package service
 
 import (
 	"darulabror/internal/dto"
+	"darulabror/internal/models"
 	"darulabror/internal/repository"
 	"errors"
 
@@ -14,8 +15,9 @@ type RegistrationService interface {
 	CreateRegistration(regDTO dto.RegistrationDTO) error
 
 	// Admin
-	GetAllRegistrations(page, limit int) ([]dto.RegistrationDTO, int64, error)
+	GetAllRegistrations(page, limit int, status string) ([]dto.RegistrationDTO, int64, error)
 	GetRegistrationByID(id uint) (dto.RegistrationDTO, error)
+	UpdateRegistrationStatus(id uint, status models.RegistrationStatus) error
 	DeleteRegistration(id uint) error
 }
 
@@ -68,8 +70,8 @@ func (s *registrationService) CreateRegistration(regDTO dto.RegistrationDTO) err
 	return nil
 }
 
-func (s *registrationService) GetAllRegistrations(page, limit int) ([]dto.RegistrationDTO, int64, error) {
-	regs, total, err := s.repo.GetAll(page, limit)
+func (s *registrationService) GetAllRegistrations(page, limit int, status string) ([]dto.RegistrationDTO, int64, error) {
+	regs, total, err := s.repo.GetAll(page, limit, status)
 	if err != nil {
 		logrus.WithError(err).Error("failed get all registrations")
 		return nil, 0, err
@@ -100,5 +102,28 @@ func (s *registrationService) DeleteRegistration(id uint) error {
 		return err
 	}
 	logrus.WithField("id", id).Info("registration deleted")
+	return nil
+}
+
+func (s *registrationService) UpdateRegistrationStatus(id uint, status models.RegistrationStatus) error {
+	// Validate status value
+	if status != models.RegistrationStatusNew && 
+	   status != models.RegistrationStatusValidate && 
+	   status != models.RegistrationStatusProcess && 
+	   status != models.RegistrationStatusDone {
+		return errors.New("invalid status value")
+	}
+	
+	if err := s.repo.UpdateStatus(id, status); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("registration not found")
+		}
+		logrus.WithError(err).WithField("id", id).Error("failed update registration status")
+		return err
+	}
+	logrus.WithFields(logrus.Fields{
+		"id":     id,
+		"status": status,
+	}).Info("registration status updated")
 	return nil
 }

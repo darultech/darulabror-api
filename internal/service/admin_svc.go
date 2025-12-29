@@ -22,6 +22,7 @@ type AdminService interface {
 
 	// shared (admin/superadmin)
 	GetAdminByID(id uint) (dto.AdminDTO, error)
+	ChangePassword(adminID uint, currentPassword, newPassword string) error
 
 	// Public (login)
 	AuthenticateAdmin(email, password string) (string, dto.AdminDTO, error)
@@ -213,5 +214,39 @@ func (s *adminService) DeleteAdmin(requesterRole models.Role, id uint) error {
 	}
 
 	logrus.WithField("id", id).Info("admin deleted")
+	return nil
+}
+
+func (s *adminService) ChangePassword(adminID uint, currentPassword, newPassword string) error {
+	// Get current admin data
+	admin, err := s.repo.GetAdminByID(adminID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrNotFoundAdmin
+		}
+		logrus.WithError(err).WithField("id", adminID).Error("failed to get admin by id")
+		return err
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(currentPassword)); err != nil {
+		logrus.WithField("id", adminID).Warn("invalid current password")
+		return ErrInvalidCredentials
+	}
+
+	// Hash new password
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		logrus.WithError(err).Error("failed to hash new password")
+		return err
+	}
+
+	// Update password
+	if err := s.repo.UpdatePassword(adminID, string(hash)); err != nil {
+		logrus.WithError(err).WithField("id", adminID).Error("failed to update password")
+		return err
+	}
+
+	logrus.WithField("id", adminID).Info("admin password changed")
 	return nil
 }

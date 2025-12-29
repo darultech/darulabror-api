@@ -44,6 +44,19 @@ type ContactCreateRequest struct {
 
 type ContactUpdateRequest = ContactCreateRequest
 
+type ContactStatusUpdateRequest struct {
+	Status string `json:"status" validate:"required,oneof=new in_progress done" example:"in_progress"`
+}
+
+type RegistrationStatusUpdateRequest struct {
+	Status string `json:"status" validate:"required,oneof=new validate process done" example:"validate"`
+}
+
+type AdminChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" validate:"required,min=6" example:"OldPassword123"`
+	NewPassword     string `json:"new_password" validate:"required,min=6" example:"NewPassword456"`
+}
+
 // ===== Typed responses used in annotations =====
 
 type ArticleListResponse = SuccessResponse[ListResponseData[dto.ArticleDTO]]
@@ -55,6 +68,7 @@ type ContactListItem struct {
 	Email     string `json:"email" example:"user@example.com"`
 	Subject   string `json:"subject" example:"Question"`
 	Message   string `json:"message" example:"Hello..."`
+	Status    string `json:"status" example:"new"`
 	CreatedAt int64  `json:"created_at" example:"1734567890"`
 }
 

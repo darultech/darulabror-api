@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"darulabror/internal/models"
 	"darulabror/internal/service"
 	"darulabror/internal/utils"
 	"net/http"
@@ -55,6 +56,7 @@ func (h *ContactHandler) Create(c echo.Context) error {
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Page size" default(10)
+// @Param status query string false "Filter by status" Enums(new, in_progress, done)
 // @Success 200 {object} ContactListResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
@@ -62,7 +64,9 @@ func (h *ContactHandler) Create(c echo.Context) error {
 // @Router /admin/contacts [get]
 func (h *ContactHandler) AdminList(c echo.Context) error {
 	page, limit := utils.ParsePagination(c)
-	items, total, err := h.svc.GetAllContacts(page, limit)
+	status := c.QueryParam("status")
+	
+	items, total, err := h.svc.GetAllContacts(page, limit, status)
 	if err != nil {
 		logrus.WithError(err).Error("failed list contacts")
 		return utils.InternalServerErrorResponse(c, "failed to fetch contacts")
@@ -166,6 +170,46 @@ func (h *ContactHandler) AdminDelete(c echo.Context) error {
 	}
 
 	if err := h.svc.DeleteContact(uint(id64)); err != nil {
+		return utils.InternalServerErrorResponse(c, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+// ADMIN: PATCH /admin/contacts/:id/status
+// AdminUpdateStatus godoc
+// @Summary Admin update contact status
+// @Tags Contacts (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Contact ID" minimum(1)
+// @Param request body ContactStatusUpdateRequest true "Status payload"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/contacts/{id}/status [patch]
+func (h *ContactHandler) AdminUpdateStatus(c echo.Context) error {
+	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return utils.BadRequestResponse(c, "invalid id")
+	}
+
+	var body ContactStatusUpdateRequest
+	if err := c.Bind(&body); err != nil {
+		return utils.BadRequestResponse(c, "invalid body")
+	}
+	if err := c.Validate(&body); err != nil {
+		return utils.UnprocessableEntityResponse(c, err.Error())
+	}
+
+	if err := h.svc.UpdateContactStatus(uint(id64), models.ContactStatus(body.Status)); err != nil {
+		if err.Error() == "contact not found" {
+			return utils.NotFoundResponse(c, err.Error())
+		}
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
