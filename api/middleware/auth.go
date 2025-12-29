@@ -3,7 +3,6 @@ package middleware
 import (
 	"darulabror/internal/models"
 	"darulabror/internal/utils"
-	"net/http"
 	"os"
 	"strings"
 
@@ -33,6 +32,10 @@ func JWTAuth() echo.MiddlewareFunc {
 			tokenStr := strings.TrimPrefix(h, "Bearer ")
 
 			token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+				// Enforce HS256/HS384/HS512 only
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, jwt.ErrSignatureInvalid
+				}
 				return []byte(secret), nil
 			})
 			if err != nil || !token.Valid {
@@ -63,7 +66,7 @@ func RequireRole(allowed ...models.Role) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			role, ok := utils.GetRole(c)
 			if !ok {
-				return c.NoContent(http.StatusUnauthorized)
+				return utils.UnauthorizedResponse(c, "unauthorized")
 			}
 			if !allowedSet[role] {
 				logrus.WithField("role", role).Warn("forbidden role")

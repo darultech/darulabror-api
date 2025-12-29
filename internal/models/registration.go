@@ -16,11 +16,21 @@ const (
 	Female Gender = "female"
 )
 
+type RegistrationStatus string
+
+const (
+	RegistrationStatusNew      RegistrationStatus = "new"
+	RegistrationStatusValidate RegistrationStatus = "validate"
+	RegistrationStatusProcess  RegistrationStatus = "process"
+	RegistrationStatusDone     RegistrationStatus = "done"
+)
+
 type Registration struct {
 	ID uint `gorm:"primaryKey" json:"id"`
 
-	StudentType StudentType `gorm:"type:text;check:student_type IN ('new','transfer');not null" json:"student_type"`
-	Gender      Gender      `gorm:"type:text;check:gender IN ('male','female');not null" json:"gender"`
+	StudentType StudentType        `gorm:"type:text;check:student_type IN ('new','transfer');not null" json:"student_type"`
+	Gender      Gender             `gorm:"type:text;check:gender IN ('male','female');not null" json:"gender"`
+	Status      RegistrationStatus `gorm:"type:text;not null;default:'new';check:status IN ('new','validate','process','done')" json:"status"`
 
 	Email    string `gorm:"not null;uniqueIndex" json:"email"`
 	FullName string `gorm:"not null" json:"full_name"`

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"darulabror/internal/models"
 	"darulabror/internal/service"
 	"darulabror/internal/utils"
 	"net/http"
@@ -18,14 +19,19 @@ func NewContactHandler(svc service.ContactService) *ContactHandler {
 	return &ContactHandler{svc: svc}
 }
 
-// PUBLIC: POST /contacts
+// Create godoc
+// @Summary Create contact message
+// @Tags Contacts (Public)
+// @Accept json
+// @Produce json
+// @Param request body ContactCreateRequest true "Contact payload"
+// @Success 201 {string} string "Created"
+// @Failure 400 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /contacts [post]
 func (h *ContactHandler) Create(c echo.Context) error {
-	type req struct {
-		Email   string `json:"email" validate:"required,email"`
-		Subject string `json:"subject" validate:"required,min=3,max=150"`
-		Message string `json:"message" validate:"required,min=3,max=2000"`
-	}
-	var body req
+	var body ContactCreateRequest
 
 	if err := c.Bind(&body); err != nil {
 		return utils.BadRequestResponse(c, "invalid body")
@@ -43,9 +49,24 @@ func (h *ContactHandler) Create(c echo.Context) error {
 }
 
 // ADMIN: GET /admin/contacts
+// AdminList godoc
+// @Summary Admin list contacts
+// @Tags Contacts (Admin)
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Page size" default(10)
+// @Param status query string false "Filter by status" Enums(new, in_progress, done)
+// @Success 200 {object} ContactListResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/contacts [get]
 func (h *ContactHandler) AdminList(c echo.Context) error {
 	page, limit := utils.ParsePagination(c)
-	items, total, err := h.svc.GetAllContacts(page, limit)
+	status := c.QueryParam("status")
+	
+	items, total, err := h.svc.GetAllContacts(page, limit, status)
 	if err != nil {
 		logrus.WithError(err).Error("failed list contacts")
 		return utils.InternalServerErrorResponse(c, "failed to fetch contacts")
@@ -62,6 +83,18 @@ func (h *ContactHandler) AdminList(c echo.Context) error {
 }
 
 // ADMIN: GET /admin/contacts/:id
+// AdminGetByID godoc
+// @Summary Admin get contact by ID
+// @Tags Contacts (Admin)
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Contact ID" minimum(1)
+// @Success 200 {object} SuccessResponse[ContactListItem]
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /admin/contacts/{id} [get]
 func (h *ContactHandler) AdminGetByID(c echo.Context) error {
 	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -76,6 +109,21 @@ func (h *ContactHandler) AdminGetByID(c echo.Context) error {
 }
 
 // ADMIN: PUT /admin/contacts/:id
+// AdminUpdate godoc
+// @Summary Admin update contact
+// @Tags Contacts (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Contact ID" minimum(1)
+// @Param request body ContactUpdateRequest true "Contact payload"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/contacts/{id} [put]
 func (h *ContactHandler) AdminUpdate(c echo.Context) error {
 	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -103,6 +151,18 @@ func (h *ContactHandler) AdminUpdate(c echo.Context) error {
 }
 
 // ADMIN: DELETE /admin/contacts/:id
+// AdminDelete godoc
+// @Summary Admin delete contact
+// @Tags Contacts (Admin)
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Contact ID" minimum(1)
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/contacts/{id} [delete]
 func (h *ContactHandler) AdminDelete(c echo.Context) error {
 	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -110,6 +170,46 @@ func (h *ContactHandler) AdminDelete(c echo.Context) error {
 	}
 
 	if err := h.svc.DeleteContact(uint(id64)); err != nil {
+		return utils.InternalServerErrorResponse(c, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+// ADMIN: PATCH /admin/contacts/:id/status
+// AdminUpdateStatus godoc
+// @Summary Admin update contact status
+// @Tags Contacts (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Contact ID" minimum(1)
+// @Param request body ContactStatusUpdateRequest true "Status payload"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/contacts/{id}/status [patch]
+func (h *ContactHandler) AdminUpdateStatus(c echo.Context) error {
+	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return utils.BadRequestResponse(c, "invalid id")
+	}
+
+	var body ContactStatusUpdateRequest
+	if err := c.Bind(&body); err != nil {
+		return utils.BadRequestResponse(c, "invalid body")
+	}
+	if err := c.Validate(&body); err != nil {
+		return utils.UnprocessableEntityResponse(c, err.Error())
+	}
+
+	if err := h.svc.UpdateContactStatus(uint(id64), models.ContactStatus(body.Status)); err != nil {
+		if err.Error() == "contact not found" {
+			return utils.NotFoundResponse(c, err.Error())
+		}
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
