@@ -95,7 +95,14 @@ func (r *registrationRepo) Delete(id uint) error {
 }
 
 func (r *registrationRepo) UpdateStatus(id uint, status models.RegistrationStatus) error {
-	return r.db.Model(&models.Registration{}).Where("id = ?", id).Update("status", status).Error
+	result := r.db.Model(&models.Registration{}).Where("id = ?", id).Update("status", status)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *registrationRepo) ExistsByEmail(email string) (bool, error) {

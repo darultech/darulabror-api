@@ -55,6 +55,7 @@ func RegistrationDTOToModel(d RegistrationDTO) (models.Registration, error) {
 		ID:                d.ID,
 		StudentType:       d.StudentType,
 		Gender:            d.Gender,
+		Status:            d.Status,
 		Email:             d.Email,
 		FullName:          d.FullName,
 		Phone:             d.Phone,

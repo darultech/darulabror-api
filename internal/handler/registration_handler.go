@@ -148,6 +148,7 @@ func (h *RegistrationHandler) AdminDelete(c echo.Context) error {
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @Failure 422 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /admin/registrations/{id}/status [patch]
@@ -166,6 +167,9 @@ func (h *RegistrationHandler) AdminUpdateStatus(c echo.Context) error {
 	}
 
 	if err := h.svc.UpdateRegistrationStatus(uint(id64), models.RegistrationStatus(body.Status)); err != nil {
+		if err.Error() == "registration not found" {
+			return utils.NotFoundResponse(c, err.Error())
+		}
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)

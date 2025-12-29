@@ -91,6 +91,9 @@ func (s *contactService) UpdateContactStatus(id uint, status models.ContactStatu
 	}
 	
 	if err := s.repo.UpdateContactStatus(id, status); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("contact not found")
+		}
 		logrus.WithError(err).WithField("id", id).Error("failed update contact status")
 		return err
 	}

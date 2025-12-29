@@ -115,6 +115,9 @@ func (s *registrationService) UpdateRegistrationStatus(id uint, status models.Re
 	}
 	
 	if err := s.repo.UpdateStatus(id, status); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("registration not found")
+		}
 		logrus.WithError(err).WithField("id", id).Error("failed update registration status")
 		return err
 	}

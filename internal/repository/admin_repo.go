@@ -72,5 +72,12 @@ func (r *adminRepository) DeleteAdmin(id uint) error {
 }
 
 func (r *adminRepository) UpdatePassword(id uint, hashedPassword string) error {
-	return r.db.Model(&models.Admin{}).Where("id = ?", id).Update("password", hashedPassword).Error
+	result := r.db.Model(&models.Admin{}).Where("id = ?", id).Update("password", hashedPassword)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

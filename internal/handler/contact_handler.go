@@ -188,6 +188,7 @@ func (h *ContactHandler) AdminDelete(c echo.Context) error {
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
 // @Failure 422 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /admin/contacts/{id}/status [patch]
@@ -206,6 +207,9 @@ func (h *ContactHandler) AdminUpdateStatus(c echo.Context) error {
 	}
 
 	if err := h.svc.UpdateContactStatus(uint(id64), models.ContactStatus(body.Status)); err != nil {
+		if err.Error() == "contact not found" {
+			return utils.NotFoundResponse(c, err.Error())
+		}
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)

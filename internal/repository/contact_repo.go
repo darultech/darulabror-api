@@ -81,5 +81,12 @@ func (r *contactRepository) DeleteContact(id uint) error {
 }
 
 func (r *contactRepository) UpdateContactStatus(id uint, status models.ContactStatus) error {
-	return r.db.Model(&models.Contact{}).Where("id = ?", id).Update("status", status).Error
+	result := r.db.Model(&models.Contact{}).Where("id = ?", id).Update("status", status)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
