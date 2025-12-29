@@ -184,7 +184,7 @@ func (h *ContactHandler) AdminDelete(c echo.Context) error {
 // @Produce json
 // @Param id path int true "Contact ID" minimum(1)
 // @Param request body ContactStatusUpdateRequest true "Status payload"
-// @Success 200 {string} string "OK"
+// @Success 204 {string} string "No Content"
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
@@ -208,5 +208,5 @@ func (h *ContactHandler) AdminUpdateStatus(c echo.Context) error {
 	if err := h.svc.UpdateContactStatus(uint(id64), models.ContactStatus(body.Status)); err != nil {
 		return utils.InternalServerErrorResponse(c, err.Error())
 	}
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }

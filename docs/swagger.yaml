@@ -1043,8 +1043,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
           schema:
             type: string
         "400":
@@ -1150,8 +1150,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
           schema:
             type: string
         "400":
@@ -1314,8 +1314,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
           schema:
             type: string
         "400":

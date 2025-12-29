@@ -238,7 +238,7 @@ func (h *AdminHandler) Login(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param request body AdminChangePasswordRequest true "Password change payload"
-// @Success 200 {string} string "OK"
+// @Success 204 {string} string "No Content"
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 422 {object} ErrorResponse
@@ -265,5 +265,5 @@ func (h *AdminHandler) ChangePassword(c echo.Context) error {
 		return utils.InternalServerErrorResponse(c, "failed to change password")
 	}
 
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }
