@@ -229,3 +229,41 @@ func (h *AdminHandler) Login(c echo.Context) error {
 // 	// ...existing code...
 // 	return c.NoContent(http.StatusOK)
 // }
+
+// ADMIN: PATCH /admin/profile/password
+// ChangePassword godoc
+// @Summary Admin change own password
+// @Tags Admins (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body AdminChangePasswordRequest true "Password change payload"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/profile/password [patch]
+func (h *AdminHandler) ChangePassword(c echo.Context) error {
+	adminID, ok := utils.GetAdminID(c)
+	if !ok {
+		return utils.UnauthorizedResponse(c, "unauthorized")
+	}
+
+	var body AdminChangePasswordRequest
+	if err := c.Bind(&body); err != nil {
+		return utils.BadRequestResponse(c, "invalid body")
+	}
+	if err := c.Validate(&body); err != nil {
+		return utils.UnprocessableEntityResponse(c, err.Error())
+	}
+
+	if err := h.svc.ChangePassword(adminID, body.CurrentPassword, body.NewPassword); err != nil {
+		if err == service.ErrInvalidCredentials {
+			return utils.UnauthorizedResponse(c, "current password is incorrect")
+		}
+		return utils.InternalServerErrorResponse(c, "failed to change password")
+	}
+
+	return c.NoContent(http.StatusOK)
+}

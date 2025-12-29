@@ -13,6 +13,7 @@ type AdminRepository interface {
 	GetAdminByID(id uint) (models.Admin, error)
 	GetAdminByEmail(email string) (models.Admin, error)
 	UpdateAdmin(admin models.Admin) error
+	UpdatePassword(id uint, hashedPassword string) error
 	DeleteAdmin(id uint) error
 }
 
@@ -68,4 +69,8 @@ func (r *adminRepository) UpdateAdmin(admin models.Admin) error {
 
 func (r *adminRepository) DeleteAdmin(id uint) error {
 	return r.db.Delete(&models.Admin{}, id).Error
+}
+
+func (r *adminRepository) UpdatePassword(id uint, hashedPassword string) error {
+	return r.db.Model(&models.Admin{}).Where("id = ?", id).Update("password", hashedPassword).Error
 }

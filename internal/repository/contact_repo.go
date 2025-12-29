@@ -11,9 +11,10 @@ type ContactRepository interface {
 	// Public methods for contact Admin
 	CreateContact(email, subject, message string) error
 	// Admin methods for contact
-	GetAllContacts(page, limit int) ([]models.Contact, int64, error)
+	GetAllContacts(page, limit int, status string) ([]models.Contact, int64, error)
 	GetContactByID(id uint) (*models.Contact, error)
 	UpdateContact(id uint, email, subject, message string) error
+	UpdateContactStatus(id uint, status models.ContactStatus) error
 	DeleteContact(id uint) error
 }
 
@@ -30,10 +31,11 @@ func (r *contactRepository) CreateContact(email, subject, message string) error 
 		Email:   email,
 		Subject: subject,
 		Message: message,
+		Status:  models.ContactStatusNew, // default status
 	}).Error
 }
 
-func (r *contactRepository) GetAllContacts(page, limit int) ([]models.Contact, int64, error) {
+func (r *contactRepository) GetAllContacts(page, limit int, status string) ([]models.Contact, int64, error) {
 	var (
 		contacts []models.Contact
 		total    int64
@@ -41,11 +43,18 @@ func (r *contactRepository) GetAllContacts(page, limit int) ([]models.Contact, i
 
 	_, limit, offset := utils.NormalizePageLimit(page, limit)
 
-	if err := r.db.Model(&models.Contact{}).Count(&total).Error; err != nil {
+	query := r.db.Model(&models.Contact{})
+	
+	// Apply status filter if provided
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	err := r.db.Order("id DESC").Limit(limit).Offset(offset).Find(&contacts).Error
+	err := query.Order("id DESC").Limit(limit).Offset(offset).Find(&contacts).Error
 	return contacts, total, err
 }
 
@@ -69,4 +78,8 @@ func (r *contactRepository) UpdateContact(id uint, email, subject, message strin
 
 func (r *contactRepository) DeleteContact(id uint) error {
 	return r.db.Delete(&models.Contact{}, id).Error
+}
+
+func (r *contactRepository) UpdateContactStatus(id uint, status models.ContactStatus) error {
+	return r.db.Model(&models.Contact{}).Where("id = ?", id).Update("status", status).Error
 }

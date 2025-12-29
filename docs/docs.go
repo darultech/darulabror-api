@@ -388,6 +388,12 @@ const docTemplate = `{
                         "description": "Optional header image file (uploaded and set to photo_header)",
                         "name": "photo_header_file",
                         "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Inline media files. Use field name: content_files[\u003cupload_key\u003e] (repeatable). Example: content_files[img1], content_files[vid1]",
+                        "name": "content_files",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -497,6 +503,12 @@ const docTemplate = `{
                         "type": "file",
                         "description": "Optional header image file (uploaded and set to photo_header)",
                         "name": "photo_header_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Inline media files. Use field name: content_files[\u003cupload_key\u003e] (repeatable). Example: content_files[img1], content_files[vid1]",
+                        "name": "content_files",
                         "in": "formData"
                     }
                 ],
@@ -623,6 +635,17 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Page size",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "new",
+                            "in_progress",
+                            "done"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -842,6 +865,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/contacts/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts (Admin)"
+                ],
+                "summary": "Admin update contact status",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Contact ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ContactStatusUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/login": {
             "post": {
                 "description": "Returns JWT token for accessing /admin endpoints.",
@@ -942,6 +1041,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/profile/password": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admins (Admin)"
+                ],
+                "summary": "Admin change own password",
+                "parameters": [
+                    {
+                        "description": "Password change payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.AdminChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/registrations": {
             "get": {
                 "security": [
@@ -969,6 +1130,18 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Page size",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "new",
+                            "validate",
+                            "process",
+                            "done"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -1101,6 +1274,82 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/registrations/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registrations (Admin)"
+                ],
+                "summary": "Admin update registration status",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Registration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.RegistrationStatusUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
@@ -1305,7 +1554,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "is_active",
                 "role",
                 "username"
             ],
@@ -1349,6 +1597,7 @@ const docTemplate = `{
             "required": [
                 "author",
                 "content",
+                "photo_header",
                 "title"
             ],
             "properties": {
@@ -1500,6 +1749,9 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 3
                 },
+                "status": {
+                    "$ref": "#/definitions/darulabror_internal_models.RegistrationStatus"
+                },
                 "student_type": {
                     "enum": [
                         "new",
@@ -1524,6 +1776,21 @@ const docTemplate = `{
                 "Female"
             ]
         },
+        "darulabror_internal_models.RegistrationStatus": {
+            "type": "string",
+            "enum": [
+                "new",
+                "validate",
+                "process",
+                "done"
+            ],
+            "x-enum-varnames": [
+                "RegistrationStatusNew",
+                "RegistrationStatusValidate",
+                "RegistrationStatusProcess",
+                "RegistrationStatusDone"
+            ]
+        },
         "darulabror_internal_models.StudentType": {
             "type": "string",
             "enum": [
@@ -1534,6 +1801,25 @@ const docTemplate = `{
                 "StudentNew",
                 "StudentTransfer"
             ]
+        },
+        "internal_handler.AdminChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "current_password",
+                "new_password"
+            ],
+            "properties": {
+                "current_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "OldPassword123"
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "NewPassword456"
+                }
+            }
         },
         "internal_handler.AdminListResponse": {
             "type": "object",
@@ -1659,6 +1945,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Hello..."
                 },
+                "status": {
+                    "type": "string",
+                    "example": "new"
+                },
                 "subject": {
                     "type": "string",
                     "example": "Question"
@@ -1678,6 +1968,23 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "internal_handler.ContactStatusUpdateRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "in_progress",
+                        "done"
+                    ],
+                    "example": "in_progress"
                 }
             }
         },
@@ -1806,6 +2113,24 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "internal_handler.RegistrationStatusUpdateRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "validate",
+                        "process",
+                        "done"
+                    ],
+                    "example": "validate"
                 }
             }
         },

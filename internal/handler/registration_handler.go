@@ -2,6 +2,7 @@ package handler
 
 import (
 	"darulabror/internal/dto"
+	"darulabror/internal/models"
 	"darulabror/internal/service"
 	"darulabror/internal/utils"
 	"net/http"
@@ -55,6 +56,7 @@ func (h *RegistrationHandler) Create(c echo.Context) error {
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Page size" default(10)
+// @Param status query string false "Filter by status" Enums(new, validate, process, done)
 // @Success 200 {object} RegistrationListResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 403 {object} ErrorResponse
@@ -62,7 +64,9 @@ func (h *RegistrationHandler) Create(c echo.Context) error {
 // @Router /admin/registrations [get]
 func (h *RegistrationHandler) AdminList(c echo.Context) error {
 	page, limit := utils.ParsePagination(c)
-	items, total, err := h.svc.GetAllRegistrations(page, limit)
+	status := c.QueryParam("status")
+	
+	items, total, err := h.svc.GetAllRegistrations(page, limit, status)
 	if err != nil {
 		logrus.WithError(err).Error("failed list registrations")
 		return utils.InternalServerErrorResponse(c, "failed to fetch registrations")
@@ -129,4 +133,40 @@ func (h *RegistrationHandler) AdminDelete(c echo.Context) error {
 		return utils.InternalServerErrorResponse(c, "failed to delete registration")
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+// ADMIN: PATCH /admin/registrations/:id/status
+// AdminUpdateStatus godoc
+// @Summary Admin update registration status
+// @Tags Registrations (Admin)
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Registration ID" minimum(1)
+// @Param request body RegistrationStatusUpdateRequest true "Status payload"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/registrations/{id}/status [patch]
+func (h *RegistrationHandler) AdminUpdateStatus(c echo.Context) error {
+	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		return utils.BadRequestResponse(c, "invalid id")
+	}
+
+	var body RegistrationStatusUpdateRequest
+	if err := c.Bind(&body); err != nil {
+		return utils.BadRequestResponse(c, "invalid body")
+	}
+	if err := c.Validate(&body); err != nil {
+		return utils.UnprocessableEntityResponse(c, err.Error())
+	}
+
+	if err := h.svc.UpdateRegistrationStatus(uint(id64), models.RegistrationStatus(body.Status)); err != nil {
+		return utils.InternalServerErrorResponse(c, err.Error())
+	}
+	return c.NoContent(http.StatusOK)
 }

@@ -14,9 +14,10 @@ type ContactService interface {
 	CreateContact(email, subject, message string) error
 
 	// Admin
-	GetAllContacts(page, limit int) ([]models.Contact, int64, error)
+	GetAllContacts(page, limit int, status string) ([]models.Contact, int64, error)
 	GetContactByID(id uint) (*models.Contact, error)
 	UpdateContact(id uint, email, subject, message string) error
+	UpdateContactStatus(id uint, status models.ContactStatus) error
 	DeleteContact(id uint) error
 }
 
@@ -44,8 +45,8 @@ func (s *contactService) CreateContact(email, subject, message string) error {
 	return nil
 }
 
-func (s *contactService) GetAllContacts(page, limit int) ([]models.Contact, int64, error) {
-	contacts, total, err := s.repo.GetAllContacts(page, limit)
+func (s *contactService) GetAllContacts(page, limit int, status string) ([]models.Contact, int64, error) {
+	contacts, total, err := s.repo.GetAllContacts(page, limit, status)
 	if err != nil {
 		logrus.WithError(err).Error("failed get all contacts")
 		return nil, 0, err
@@ -80,5 +81,22 @@ func (s *contactService) DeleteContact(id uint) error {
 		return err
 	}
 	logrus.WithField("id", id).Info("contact deleted")
+	return nil
+}
+
+func (s *contactService) UpdateContactStatus(id uint, status models.ContactStatus) error {
+	// Validate status value
+	if status != models.ContactStatusNew && status != models.ContactStatusInProgress && status != models.ContactStatusDone {
+		return errors.New("invalid status value")
+	}
+	
+	if err := s.repo.UpdateContactStatus(id, status); err != nil {
+		logrus.WithError(err).WithField("id", id).Error("failed update contact status")
+		return err
+	}
+	logrus.WithFields(logrus.Fields{
+		"id":     id,
+		"status": status,
+	}).Info("contact status updated")
 	return nil
 }

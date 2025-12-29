@@ -8,10 +8,11 @@ import (
 type RegistrationDTO struct {
 	ID uint `json:"id" validate:"omitempty"`
 
-	StudentType models.StudentType `json:"student_type" validate:"required,oneof=new transfer"`
-	FullName    string             `json:"full_name" validate:"required,min=3,max=100"`
-	Email       string             `json:"email" validate:"required,email"`
-	Phone       string             `json:"phone" validate:"required,min=10,max=13"`
+	StudentType models.StudentType        `json:"student_type" validate:"required,oneof=new transfer"`
+	FullName    string                    `json:"full_name" validate:"required,min=3,max=100"`
+	Email       string                    `json:"email" validate:"required,email"`
+	Phone       string                    `json:"phone" validate:"required,min=10,max=13"`
+	Status      models.RegistrationStatus `json:"status,omitempty"`
 
 	Gender       models.Gender `json:"gender" validate:"required,oneof=male female"`
 	PlaceOfBirth string        `json:"place_of_birth" validate:"required,min=3,max=100"`
@@ -94,6 +95,7 @@ func RegistrationModelToDTO(m models.Registration) RegistrationDTO {
 		MotherOccupation:  m.MotherOccupation,
 		PhoneMother:       m.PhoneMother,
 		DateOfBirthMother: m.DateOfBirthMother.Format(dateLayout),
+		Status:            m.Status,
 		CreatedAt:         m.CreatedAt.Format(time.RFC3339),
 	}
 }

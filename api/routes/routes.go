@@ -34,6 +34,7 @@ func Register(e *echo.Echo, h Handlers) {
 	admin := e.Group("/admin", middleware.JWTAuth(), middleware.RequireRole(models.Admins, models.Superadmin))
 
 	admin.GET("/profile", h.Admin.Profile)
+	admin.PATCH("/profile/password", h.Admin.ChangePassword)
 
 	// manage articles
 	admin.GET("/articles", h.Article.AdminListAll)
@@ -44,12 +45,14 @@ func Register(e *echo.Echo, h Handlers) {
 	// manage registrations
 	admin.GET("/registrations", h.Registration.AdminList)
 	admin.GET("/registrations/:id", h.Registration.AdminGetByID)
+	admin.PATCH("/registrations/:id/status", h.Registration.AdminUpdateStatus)
 	admin.DELETE("/registrations/:id", h.Registration.AdminDelete)
 
 	// manage contacts
 	admin.GET("/contacts", h.Contact.AdminList)
 	admin.GET("/contacts/:id", h.Contact.AdminGetByID)
 	admin.PUT("/contacts/:id", h.Contact.AdminUpdate)
+	admin.PATCH("/contacts/:id/status", h.Contact.AdminUpdateStatus)
 	admin.DELETE("/contacts/:id", h.Contact.AdminDelete)
 
 	// ======================

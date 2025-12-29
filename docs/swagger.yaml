@@ -27,7 +27,6 @@ definitions:
         type: string
     required:
     - email
-    - is_active
     - role
     - username
     type: object
@@ -62,6 +61,7 @@ definitions:
     required:
     - author
     - content
+    - photo_header
     - title
     type: object
   darulabror_internal_dto.RegistrationDTO:
@@ -130,6 +130,8 @@ definitions:
         maxLength: 100
         minLength: 3
         type: string
+      status:
+        $ref: '#/definitions/darulabror_internal_models.RegistrationStatus'
       student_type:
         allOf:
         - $ref: '#/definitions/darulabror_internal_models.StudentType'
@@ -164,6 +166,18 @@ definitions:
     x-enum-varnames:
     - Male
     - Female
+  darulabror_internal_models.RegistrationStatus:
+    enum:
+    - new
+    - validate
+    - process
+    - done
+    type: string
+    x-enum-varnames:
+    - RegistrationStatusNew
+    - RegistrationStatusValidate
+    - RegistrationStatusProcess
+    - RegistrationStatusDone
   darulabror_internal_models.StudentType:
     enum:
     - new
@@ -172,6 +186,20 @@ definitions:
     x-enum-varnames:
     - StudentNew
     - StudentTransfer
+  internal_handler.AdminChangePasswordRequest:
+    properties:
+      current_password:
+        example: OldPassword123
+        minLength: 6
+        type: string
+      new_password:
+        example: NewPassword456
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
   internal_handler.AdminListResponse:
     properties:
       data:
@@ -261,6 +289,9 @@ definitions:
       message:
         example: Hello...
         type: string
+      status:
+        example: new
+        type: string
       subject:
         example: Question
         type: string
@@ -275,6 +306,18 @@ definitions:
       status:
         example: success
         type: string
+    type: object
+  internal_handler.ContactStatusUpdateRequest:
+    properties:
+      status:
+        enum:
+        - new
+        - in_progress
+        - done
+        example: in_progress
+        type: string
+    required:
+    - status
     type: object
   internal_handler.ContactUpdateRequest:
     properties:
@@ -363,6 +406,19 @@ definitions:
       status:
         example: success
         type: string
+    type: object
+  internal_handler.RegistrationStatusUpdateRequest:
+    properties:
+      status:
+        enum:
+        - new
+        - validate
+        - process
+        - done
+        example: validate
+        type: string
+    required:
+    - status
     type: object
   internal_handler.SuccessResponse-darulabror_internal_dto_AdminDTO:
     properties:
@@ -650,6 +706,11 @@ paths:
         in: formData
         name: photo_header_file
         type: file
+      - description: 'Inline media files. Use field name: content_files[<upload_key>]
+          (repeatable). Example: content_files[img1], content_files[vid1]'
+        in: formData
+        name: content_files
+        type: file
       produces:
       - application/json
       responses:
@@ -759,6 +820,11 @@ paths:
         in: formData
         name: photo_header_file
         type: file
+      - description: 'Inline media files. Use field name: content_files[<upload_key>]
+          (repeatable). Example: content_files[img1], content_files[vid1]'
+        in: formData
+        name: content_files
+        type: file
       produces:
       - application/json
       responses:
@@ -804,6 +870,14 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Filter by status
+        enum:
+        - new
+        - in_progress
+        - done
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -949,6 +1023,55 @@ paths:
       summary: Admin update contact
       tags:
       - Contacts (Admin)
+  /admin/contacts/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contact ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.ContactStatusUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin update contact status
+      tags:
+      - Contacts (Admin)
   /admin/login:
     post:
       consumes:
@@ -1013,6 +1136,45 @@ paths:
       summary: Get admin profile (from JWT)
       tags:
       - Admins (Admin)
+  /admin/profile/password:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Password change payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.AdminChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin change own password
+      tags:
+      - Admins (Admin)
   /admin/registrations:
     get:
       parameters:
@@ -1026,6 +1188,15 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Filter by status
+        enum:
+        - new
+        - validate
+        - process
+        - done
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -1121,6 +1292,55 @@ paths:
       security:
       - BearerAuth: []
       summary: Admin get registration by ID
+      tags:
+      - Registrations (Admin)
+  /admin/registrations/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Registration ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.RegistrationStatusUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Admin update registration status
       tags:
       - Registrations (Admin)
   /articles:
